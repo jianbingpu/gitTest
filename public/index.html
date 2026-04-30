@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>Pages Function ²âÊÔ</title>
+  <title>Pages Function æµ‹è¯•</title>
   <script>
     var _hmt = _hmt || [];
     (function() {
@@ -14,8 +14,8 @@
   </script>
 </head>
 <body>
-  <input type="text" id="promptInput" placeholder="ÊäÈëÎÊÌâ">
-  <button onclick="callAPI()">·¢ËÍ</button>
+  <input type="text" id="promptInput" placeholder="è¾“å…¥é—®é¢˜">
+  <button onclick="callAPI()">å‘é€</button>
   <div id="output"></div>
 
   <script>
@@ -23,7 +23,7 @@
       const promptText = document.getElementById('promptInput').value;
       if (!promptText) return;
 
-      // ÖØµã£ºÖ±½ÓÇëÇóÏà¶ÔÂ·¾¶£¬Cloudflare »á×Ô¶¯Â·ÓÉµ½ functions/api/chat.js
+      // é‡ç‚¹ï¼šç›´æ¥è¯·æ±‚ç›¸å¯¹è·¯å¾„ï¼ŒCloudflare ä¼šè‡ªåŠ¨è·¯ç”±åˆ° functions/api/chat.js
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
