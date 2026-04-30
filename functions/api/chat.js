@@ -7,7 +7,7 @@ export async function onRequestPost(context) {
     const body = await context.request.json();
     
     // 调用绑定的 AI 模型
-    const aiResponse = await context.env.AI.run('@cf/minimax/m2.7', {
+    const aiResponse = await context.env.AI.run('openai/gpt-5.5-pro', {
       prompt: body.prompt
     });
 
