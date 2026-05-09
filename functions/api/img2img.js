@@ -7,9 +7,10 @@ export async function onRequestPost(context) {
     if (!prompt) return jsonResponse({ error: 'prompt is required' }, 400);
     if (!image) return jsonResponse({ error: 'image is required for img2img' }, 400);
 
+    // SD img2img 的 image 参数需要是数组（base64 字符串数组）
     const result = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img', {
       prompt,
-      image
+      image: [image]
     });
 
     return jsonResponse({ image: result });
