@@ -9,7 +9,7 @@ export async function onRequestPost(context) {
     const { prompt } = body;
     if (!prompt) return jsonResponse({ error: 'prompt is required' }, 400);
 
-    const result = await env.AI.run('@cf/blackforestlabs/flux-2-klein-9b', { prompt });
+    const result = await env.AI.run('@cf/black-forest-labs/flux-2-klein-9b', { prompt });
     return jsonResponse({ image: result });
   } catch (err) {
     return jsonResponse({ error: err.message }, 500);
