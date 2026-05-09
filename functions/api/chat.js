@@ -6,7 +6,8 @@ export async function onRequestPost(context) {
     const { prompt } = body;
     if (!prompt) return jsonResponse({ error: 'prompt is required' }, 400);
 
-    const result = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-inpainting', { prompt });
+    // FLUX.2 klein 是纯文生图模型，只需 prompt
+    const result = await env.AI.run('@cf/blackforestlabs/flux-2-klein-9b', { prompt });
 
     return jsonResponse({ image: result });
   } catch (err) {
