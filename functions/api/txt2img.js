@@ -1,11 +1,7 @@
-// Workers AI 内置 SD v1.5 模型
-// /api/txt2img → 文生图 inpainting（空白底图）
-// /api/img2img → 图生图 img2img（用户底图）
+// /api/txt2img → FLUX.2 klein 文生图（只需 prompt）
+// /api/img2img → SD v1.5 img2img（用户底图）
 
-// 纯白 512x512 PNG（inpainting 的底图，原始 base64 无 data URI 前缀）
-const WHITE_IMG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
-
-// ========== 文生图（inpainting + 空白底图） ==========
+// ========== 文生图 ==========
 export async function onRequestPost(context) {
   const { request, env } = context;
   try {
@@ -13,10 +9,28 @@ export async function onRequestPost(context) {
     const { prompt } = body;
     if (!prompt) return jsonResponse({ error: 'prompt is required' }, 400);
 
-    const result = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-inpainting', {
+    const result = await env.AI.run('@cf/blackforestlabs/flux-2-klein-9b', { prompt });
+    return jsonResponse({ image: result });
+  } catch (err) {
+    return jsonResponse({ error: err.message }, 500);
+  }
+}
+
+// ========== 图生图 ==========
+export async function onRequestPostImg2Img(context) {
+  const { request, env } = context;
+  if (!request.url.includes('/api/img2img')) return;
+
+  try {
+    const body = await request.json();
+    const { prompt, image } = body;
+    if (!prompt) return jsonResponse({ error: 'prompt is required' }, 400);
+    if (!image) return jsonResponse({ error: 'image is required for img2img' }, 400);
+
+    const cleanImage = image.replace(/^data:[^;]+;base64,/, '');
+    const result = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img', {
       prompt,
-      image: [WHITE_IMG_B64],
-      mask: [WHITE_IMG_B64]
+      image: [cleanImage]
     });
 
     return jsonResponse({ image: result });
