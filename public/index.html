@@ -277,7 +277,7 @@
         if (data.error) {
           out.innerHTML = `<div class="error-msg">错误: ${data.error}</div>`;
         } else if (data.image) {
-          out.innerHTML = `<img class="result-img" src="${data.image}" alt="生成结果">`;
+          out.innerHTML = `<img class="result-img" src="data:image/jpeg;base64,${data.image}" alt="生成结果">`;
         } else {
           out.innerHTML = `<div class="error-msg">意外响应: ${JSON.stringify(data)}</div>`;
         }
@@ -314,7 +314,7 @@
         if (data.error) {
           out.innerHTML = `<div class="error-msg">错误: ${data.error}</div>`;
         } else if (data.image) {
-          out.innerHTML = `<img class="result-img" src="${data.image}" alt="生成结果">`;
+          out.innerHTML = `<img class="result-img" src="data:image/jpeg;base64,${data.image}" alt="生成结果">`;
         } else {
           out.innerHTML = `<div class="error-msg">意外响应: ${JSON.stringify(data)}</div>`;
         }
