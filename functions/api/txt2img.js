@@ -2,8 +2,8 @@
 // /api/txt2img → 文生图 inpainting（空白底图）
 // /api/img2img → 图生图 img2img（用户底图）
 
-// 纯白 512x512 PNG（inpainting 的底图）
-const WHITE_IMG_B64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+// 纯白 512x512 PNG（inpainting 的底图，原始 base64 无 data URI 前缀）
+const WHITE_IMG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
 
 // ========== 文生图（inpainting + 空白底图） ==========
 export async function onRequestPost(context) {
@@ -13,7 +13,6 @@ export async function onRequestPost(context) {
     const { prompt } = body;
     if (!prompt) return jsonResponse({ error: 'prompt is required' }, 400);
 
-    // inpainting 的 image 和 mask 都需要是数组
     const result = await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-inpainting', {
       prompt,
       image: [WHITE_IMG_B64],
