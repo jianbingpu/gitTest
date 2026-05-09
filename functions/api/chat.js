@@ -1,5 +1,5 @@
 // 处理 POST 请求的函数
-// 注意：通过 AI Gateway REST API 调用第三方模型（需要 CLOUDFLARE_API_TOKEN 环境变量）
+// Workers AI 内置模型，无需额外 token
 export async function onRequestPost(context) {
   const { request, env } = context;
 
@@ -11,29 +11,28 @@ export async function onRequestPost(context) {
       return jsonResponse({ error: 'prompt is required' }, 400);
     }
 
-    // 通过 Cloudflare AI Gateway REST API 调用（需要 CF_API_TOKEN）
-    const accountId = env.CLOUDFLARE_ACCOUNT_ID;
-    const apiToken = env.CLOUDFLARE_API_TOKEN;
-
-    if (!accountId || !apiToken) {
-      return jsonResponse({ error: 'Missing CLOUDFLARE_ACCOUNT_ID or CLOUDFLARE_API_TOKEN env' }, 500);
-    }
-
-    const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai_gateway/prompts`;
-    const resp = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'anthropic/claude-opus-4.7',
-        messages: [{ role: 'user', content: userPrompt }]
-      })
+    // 使用 Workers AI 内置的 Llama 4 Scout 模型
+    const aiResponse = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
+      messages: [{ role: 'user', content: userPrompt }]
     });
 
-    const data = await resp.json();
-    const text = data?.result?.response || data?.response || JSON.stringify(data);
+    // 兼容多种返回结构
+    let text = '';
+    if (typeof aiResponse === 'string') {
+      text = aiResponse;
+    } else if (aiResponse.response) {
+      text = aiResponse.response;
+    } else if (aiResponse.messages?.length) {
+      text = aiResponse.messages[0]?.content || '';
+    } else if (aiResponse.choices?.length) {
+      text = aiResponse.choices[0]?.message?.content || '';
+    } else if (aiResponse.output?.text) {
+      text = aiResponse.output.text;
+    } else if (aiResponse.result?.text) {
+      text = aiResponse.result.text;
+    } else {
+      text = JSON.stringify(aiResponse);
+    }
 
     return jsonResponse({ response: text });
 
