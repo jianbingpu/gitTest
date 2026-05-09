@@ -1,4 +1,5 @@
 // 处理 POST 请求的函数
+// 注意：通过 AI Gateway REST API 调用第三方模型（需要 CLOUDFLARE_API_TOKEN 环境变量）
 export async function onRequestPost(context) {
   const { request, env } = context;
 
@@ -7,44 +8,43 @@ export async function onRequestPost(context) {
     const userPrompt = body.prompt || body.message || '';
 
     if (!userPrompt) {
-      return new Response(JSON.stringify({ error: 'prompt is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return jsonResponse({ error: 'prompt is required' }, 400);
     }
 
-    // 调用 Cloudflare AI Gateway 的 Anthropic Claude Opus 4.7
-    const aiResponse = await env.AI.run('@cf/anthropic/claude-opus-4.7', {
-      messages: [{ role: 'user', content: userPrompt }]
-    });
+    // 通过 Cloudflare AI Gateway REST API 调用（需要 CF_API_TOKEN）
+    const accountId = env.CLOUDFLARE_ACCOUNT_ID;
+    const apiToken = env.CLOUDFLARE_API_TOKEN;
 
-    // 兼容多种返回结构
-    let text = '';
-    if (typeof aiResponse === 'string') {
-      text = aiResponse;
-    } else if (aiResponse.response) {
-      text = aiResponse.response;
-    } else if (aiResponse.messages?.length) {
-      text = aiResponse.messages[0]?.content || '';
-    } else if (aiResponse.choices?.length) {
-      text = aiResponse.choices[0]?.message?.content || '';
-    } else if (aiResponse.output?.text) {
-      text = aiResponse.output.text;
-    } else if (aiResponse.result?.text) {
-      text = aiResponse.result.text;
-    } else {
-      // 兜底：尝试序列化整个响应看有什么字段
-      text = JSON.stringify(aiResponse);
+    if (!accountId || !apiToken) {
+      return jsonResponse({ error: 'Missing CLOUDFLARE_ACCOUNT_ID or CLOUDFLARE_API_TOKEN env' }, 500);
     }
 
-    return new Response(JSON.stringify({ response: text }), {
-      headers: { 'Content-Type': 'application/json' }
+    const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai_gateway/prompts`;
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-opus-4.7',
+        messages: [{ role: 'user', content: userPrompt }]
+      })
     });
+
+    const data = await resp.json();
+    const text = data?.result?.response || data?.response || JSON.stringify(data);
+
+    return jsonResponse({ response: text });
 
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message || String(err) }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return jsonResponse({ error: err.message || String(err) }, 500);
   }
+}
+
+function jsonResponse(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
 }
